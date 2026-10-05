@@ -1,8 +1,10 @@
-# Лабораторні роботи
+# Cloud Labs
 
-Автор: Sofia Kononova
+Author: Sofia Kononova
 
-| Лабораторна | Тема | Папка |
+| Lab | Topic | Folder |
 |---|---|---|
-| 1 | ASP.NET Core Web App на Azure App Service + Azure SQL | [lab1-aspnet-webapp](lab1-aspnet-webapp) |
-| 3 | Телефонна книга на Azure Table Storage та Blob Storage | [lab3-azure-storage](lab3-azure-storage) |
+| 1 | ASP.NET Core web app on Azure App Service + Azure SQL Database | [lab1-aspnet-webapp](lab1-aspnet-webapp) |
+| 3 | Phone book on Azure Table Storage and Blob Storage | [lab3-azure-storage](lab3-azure-storage) |
+
+Each lab folder has its own README with setup and run instructions.

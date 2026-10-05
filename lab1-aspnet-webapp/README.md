@@ -78,17 +78,19 @@ FROM AspNetUsers;
 
 ## ⚙️ Local Setup Instructions
 
-1. Clone the repository:
+1. Clone the repository and open the lab folder:
 
 ```bash
-git clone [https://github.com/x-sof-x/azure-aspnet-webapp.git](https://github.com/x-sof-x/azure-aspnet-webapp.git)
+git clone https://github.com/x-sof-x/cloud-labs.git
+cd cloud-labs/lab1-aspnet-webapp
 ```
 
 2. Update the connection string in `appsettings.Development.json` for your local SQL Server instance.
 
-3. Apply migrations and run the application:
+3. Install the EF Core CLI tool (once), apply migrations and run the application:
 
 ```bash
+dotnet tool install --global dotnet-ef
 dotnet ef database update
 dotnet run
 ```

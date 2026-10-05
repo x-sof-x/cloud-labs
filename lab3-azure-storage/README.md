@@ -1,107 +1,118 @@
-# Лабораторна робота 3: Телефонна книга на Azure Storage
+# Lab 3: Phone Book on Azure Storage
 
-Windows Forms застосунок (C#, .NET), який зберігає контакти в хмарі Microsoft Azure:
+A Windows Forms application (C#, .NET) that stores contacts in the Microsoft Azure cloud:
 
-- **Azure Table Storage**: текстові дані контакту (прізвище, ім'я, по батькові, адреса, телефони, посилання на фото);
-- **Azure Blob Storage**: файли фотографій.
+- **Azure Table Storage** holds the text data of a contact (last name, first name, middle name, address, phone numbers, link to the photo).
+- **Azure Blob Storage** holds the photo files.
 
-## Можливості
+> The application interface (labels and messages) is in Ukrainian.
 
-- додавання, редагування й видалення контактів;
-- кілька телефонів в одного контакту;
-- завантаження фото контакту й показ його у формі;
-- узгоджене видалення: спочатку фото з Blob, потім запис із таблиці;
-- оновлення списку з хмари кнопкою «Оновити».
+## Features
 
-## Скріншоти
+- Add, edit and delete contacts
+- Multiple phone numbers per contact
+- Upload a contact photo and display it in the form
+- Consistent deletion: the photo is removed from Blob Storage first, then the record from the table
+- Refresh the list from the cloud with the "Refresh" button
 
-### Головна форма
+## Screenshots
 
-![Головна форма застосунку](screenshots/form.png)
+### Main form
 
-### Таблиця `contacts` в Azure Table Storage
+![Main form](screenshots/form.png)
 
-![Таблиця contacts](screenshots/table.png)
+### `contacts` table in Azure Table Storage
 
-### Контейнер `contactphotos` в Azure Blob Storage
+![contacts table](screenshots/table.png)
 
-![Контейнер contactphotos](screenshots/blob.png)
+### `contactphotos` container in Azure Blob Storage
 
-## Як це влаштовано
+![contactphotos container](screenshots/blob.png)
 
-| Частина | Де лежить | Що робить |
+## Project structure
+
+| Part | Location | Purpose |
 |---|---|---|
-| Інтерфейс | `Form1.cs`, `Form1.Designer.cs` | поля, кнопки, обробники подій |
-| Робота з таблицею | `Services/ContactTableService.cs` | додати, прочитати, оновити, видалити запис |
-| Робота з Blob | `Services/ContactPhotoService.cs` | завантажити й видалити фото |
-| Модель даних | `Models/ContactEntity.cs` | сутність контакту для Table Storage |
+| User interface | `Form1.cs`, `Form1.Designer.cs` | Fields, buttons, event handlers |
+| Table access | `Services/ContactTableService.cs` | Add, read, update and delete records |
+| Blob access | `Services/ContactPhotoService.cs` | Upload and delete photos |
+| Data model | `Models/ContactEntity.cs` | Contact entity for Table Storage |
 
-Зв'язок між службами: GUID контакту є і `RowKey` запису в таблиці, і початком імені файлу в Blob. Крім того, URL фото зберігається в полі `PhotoUrl`. `PartitionKey` це прізвище контакту.
+### How the two services are linked
 
-### Видалення контакту
+The two Azure services are independent, so the application links them itself:
 
-1. Видаляється фото з Blob Storage за GUID контакту.
-2. Видаляється запис із Table Storage за парою `PartitionKey` + `RowKey`.
+- The contact's GUID is both the `RowKey` of the table record and the beginning of the blob (file) name.
+- The blob URL is stored in the `PhotoUrl` property of the table record.
+- `PartitionKey` is the contact's last name.
 
-Таким чином у таблиці не лишається запису, що вказує на неіснуюче фото.
+### Deleting a contact
 
-## NuGet-пакети
+1. The photo is deleted from Blob Storage using the contact's GUID.
+2. The record is deleted from Table Storage using `PartitionKey` + `RowKey`.
 
-- `Azure.Data.Tables`: клас `TableClient`, інтерфейс `ITableEntity`
-- `Azure.Storage.Blobs`: класи `BlobServiceClient`, `BlobContainerClient`, `BlobClient`
+This order guarantees that no table record is left pointing to a photo that no longer exists.
 
-## Вимоги
+## NuGet packages
 
-- Windows, Visual Studio 2022 з робочим навантаженням «.NET desktop development»
-- Обліковий запис Azure (підійде безкоштовний або Azure for Students) і Storage account
+| Package | Main types |
+|---|---|
+| `Azure.Data.Tables` | `TableClient`, `ITableEntity` |
+| `Azure.Storage.Blobs` | `BlobServiceClient`, `BlobContainerClient`, `BlobClient` |
 
-## Налаштування Azure
+## Requirements
 
-1. В Azure Portal створи **Storage account** (Standard, будь-який регіон).
-2. Відкрий **Security + networking → Access keys** і скопіюй **Connection string** для key1.
-3. Таблиця `contacts` і контейнер `contactphotos` створюються програмою автоматично при першому запуску.
-4. Щоб фото відображалися у формі, контейнер має бути доступним для читання:
-   - у Storage account → **Configuration** увімкни **Allow Blob anonymous access**;
-   - відкрий контейнер `contactphotos` → **Change access level** → **Blob (anonymous read access for blobs only)**.
+- Windows
+- Visual Studio 2022 with the ".NET desktop development" workload
+- An Azure account (a free or Azure for Students account is enough) and a Storage account
 
-## Рядок підключення
+## Azure setup
 
-Рядок підключення містить ключ доступу, тому **його не зберігають у коді та не додають у репозиторій**. Програма читає його зі змінної середовища `AZURE_STORAGE_CONNECTION`.
+1. In the Azure Portal, create a **Storage account** (Standard performance, any region).
+2. Open **Security + networking → Access keys** and copy the **Connection string** of key1.
+3. The `contacts` table and the `contactphotos` container are created automatically by the application on first launch.
+4. To display photos in the form, the container must allow public read access:
+   - In the Storage account, open **Configuration** and enable **Allow Blob anonymous access**.
+   - Open the `contactphotos` container → **Change access level** → **Blob (anonymous read access for blobs only)**.
 
-У PowerShell виконай (підстав свій рядок між лапки):
+## Connection string
+
+The connection string contains an access key, so it is **never stored in the code or committed to the repository**. The application reads it from the `AZURE_STORAGE_CONNECTION` environment variable.
+
+Run in PowerShell, replacing the value with your own connection string:
 
 ```powershell
 setx AZURE_STORAGE_CONNECTION "DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net"
 ```
 
-Після цього **повністю закрий і знову відкрий Visual Studio**, інакше вона не побачить нову змінну.
-Якщо змінну не задано, програма покаже повідомлення і завершиться.
+Then **close and reopen Visual Studio completely**, otherwise it will not see the new variable.
+If the variable is not set, the application shows a message and exits.
 
-## Запуск
+## Running the application
 
-1. Клонуй репозиторій:
+1. Clone the repository:
    ```bash
-   git clone https://github.com/x-sof-x/azure-aspnet-webapp.git
+   git clone https://github.com/x-sof-x/cloud-labs.git
    ```
-2. Відкрий файл рішення `lab3-azure-storage/labCloud№3.sln` у Visual Studio.
-3. Задай змінну `AZURE_STORAGE_CONNECTION` (див. вище).
-4. Натисни **F5**. NuGet-пакети відновляться автоматично.
-5. Заповни прізвище й ім'я, за бажання додай телефони та фото й натисни «Додати».
+2. Open `lab3-azure-storage/labCloud№3.sln` in Visual Studio.
+3. Set the `AZURE_STORAGE_CONNECTION` variable (see above).
+4. Press **F5**. NuGet packages are restored automatically.
+5. Enter a last name and first name, optionally add phone numbers and a photo, and click "Add".
 
-## Перевірка результату
+## Verifying the result
 
-Дані можна подивитися в **Azure Storage Explorer** або в Azure Portal → Storage browser: у таблиці `contacts` будуть записи, а в контейнері `contactphotos` будуть файли фото.
+Use **Azure Storage Explorer** or Azure Portal → Storage browser. The `contacts` table contains the records, and the `contactphotos` container contains the photo files.
 
-## Обмеження
+## Limitations
 
-- Прізвище є `PartitionKey`, тому його не можна змінити після створення контакту.
-- Телефони зберігаються одним рядком через `;`, тож цей символ не можна використовувати в номері.
-- Між Table Storage і Blob Storage немає транзакцій: узгодженість забезпечує сам застосунок порядком операцій.
+- The last name is the `PartitionKey`, so it cannot be changed after a contact is created.
+- Phone numbers are stored as a single `;`-separated string, so `;` cannot be used inside a number.
+- There are no transactions across Table Storage and Blob Storage; consistency is ensured by the order of operations in the application.
 
-## Після здачі
+## Cleanup
 
-Щоб не платити й не лишати відкритих ключів, видали resource group із ресурсами в Azure Portal.
+After the lab is graded, delete the resource group in the Azure Portal to avoid charges and to leave no active access keys.
 
-## Автор
+## Author
 
 Sofia Kononova, GitHub: [@x-sof-x](https://github.com/x-sof-x)
