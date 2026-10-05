@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lab1-aspnet-webapp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build
+        run: dotnet build lab1-aspnet-webapp/MyAzureApp.sln --configuration Release
+
+  lab3-azure-storage:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Build
+        shell: pwsh
+        run: |
+          $sln = (Get-ChildItem lab3-azure-storage -Filter *.sln).FullName
+          dotnet build $sln --configuration Release
